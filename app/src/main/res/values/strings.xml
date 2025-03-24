@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">LocationAware</string>
+    <string name="findMe">FindMe</string>
+    <string name="textMe">TextMe</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="str_location">Location:</string>
+    <string name="str_coordinate">0.000, 0.000</string>
+</resources>
