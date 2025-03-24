@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     //class constants
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1002;
-    private static final String PHONE_NUMBER = "+250796179524";
+    private static final String PHONE_NUMBER = "+250796154972";
 
     //location components
     private FusedLocationProviderClient fusedLocationClient;
