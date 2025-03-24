@@ -29,64 +29,67 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+//the main class for the app
 public class MainActivity extends AppCompatActivity {
 
-    // Constants
+    //class constants
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int SMS_PERMISSION_REQUEST_CODE = 1002;
     private static final String PHONE_NUMBER = "+250796179524";
 
-    // Location components
+    //location components
     private FusedLocationProviderClient fusedLocationClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
 
-    // UI Components
+    //UI Components
     private Button btnFindMe;
     private Button btnTextMe;
     private LocationFragment locationFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //instantiate default oncreate states
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // Set up window insets
+        //set up window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Initialize location services
+        //initialize location services
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Set up UI components
+        //set up UI components by assigning buttons to their respective id
         btnFindMe = findViewById(R.id.btnFindMe);
         btnTextMe = findViewById(R.id.btnTextMe);
 
-        // Get reference to the location fragment
+        //get reference to the location fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         locationFragment = (LocationFragment) fragmentManager.findFragmentById(R.id.fragmentContainerView);
 
-        // Initialize location request
+        //initialize location request
         createLocationRequest();
 
-        // Initialize location callback
+        //initialize location callback
         createLocationCallback();
 
-        // Set up button click listeners
+        //set up button click listeners
         setupButtonListeners();
 
-        // Request initial location
+        //request initial location
         getLastLocation();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Check permissions and start location updates if permissions granted
+
+        //check permissions and start location updates if permissions granted
         if (checkLocationPermission()) {
             requestLocationUpdate();
         } else {
@@ -95,9 +98,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets up click listeners for the buttons.
+     * Helper function: sets up click listeners for the buttons.
      */
     private void setupButtonListeners() {
+        //listener for find me button
         btnFindMe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //listener for text me button
         btnTextMe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Creates the location request
+     * Helper function: creates the location request
      */
     private void createLocationRequest() {
         locationRequest = new LocationRequest.Builder(5000)
@@ -128,14 +133,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Creates the location callback that handles location updates.
+     * Helper function: creates the location callback that handles location updates.
      */
     private void createLocationCallback() {
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    // Update location in fragment
+                    //update the location in fragment
                     if (locationFragment != null) {
                         locationFragment.updateCoordinates(
                                 location.getLatitude(),
@@ -148,9 +153,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Retrieves the last known location.
+     * Helper function: retrieves the last known location.
      */
     private void getLastLocation() {
+        //check permission and proceed
         if (checkLocationPermission()) {
             fusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -165,13 +171,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         } else {
+            //request permission
             requestLocationPermission();
         }
     }
 
     /**
-     * Requests a location update.
-     * Called by LocationFragment every 5 seconds.
+     * Helper function: requests a location update. Called by LocationFragment every 5 seconds.
      */
     public void requestLocationUpdate() {
         if (checkLocationPermission()) {
@@ -184,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Opens the current location in Google Maps.
+     * Helper function: opens the current location in Google Maps.
      */
     private void openLocationInGoogleMaps() {
         if (locationFragment != null) {
@@ -192,13 +198,13 @@ public class MainActivity extends AppCompatActivity {
             double longitude = locationFragment.getLongitude();
 
             try {
-                // Try a more reliable approach to open Google Maps
+                //try to open the location external to the app. Set the intent, start an activity in android based on the intent
                 String uri = String.format("https://www.google.com/maps/search/?api=1&query=%f,%f", latitude, longitude);
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             } catch (Exception e) {
-                // Fallback to geo URI if the first approach fails
+                //fallback to geo URI if the first approach fails
                 try {
                     Uri gmmIntentUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude);
                     Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
@@ -212,9 +218,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sends an SMS with the current location.
+     * Helper function: sends an SMS with the current location.
      */
     private void sendLocationSms() {
+        //get location parameters
         if (locationFragment != null) {
             double latitude = locationFragment.getLatitude();
             double longitude = locationFragment.getLongitude();
@@ -222,19 +229,20 @@ public class MainActivity extends AppCompatActivity {
             String message = "My current location is: " + latitude + ", " + longitude +
                     "\nGoogle Maps: https://maps.google.com/?q=" + latitude + "," + longitude;
 
+            //attempt sending the message to the number by calling the sms manager class
             try {
                 SmsManager smsManager = SmsManager.getDefault();
                 smsManager.sendTextMessage(PHONE_NUMBER, null, message, null, null);
-                Toast.makeText(this, "SMS sent successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "SMS sent successfully", Toast.LENGTH_SHORT).show();   //notification success
             } catch (Exception e) {
-                Toast.makeText(this, "SMS failed to send: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "SMS failed to send: " + e.getMessage(), Toast.LENGTH_SHORT).show();   //notification fail
                 e.printStackTrace();
             }
         }
     }
 
     /**
-     * Checks if location permission is granted.
+     * Helper function: checks if location permission is granted.
      */
     private boolean checkLocationPermission() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -244,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Requests location permission.
+     * Helper function: requests location permission.
      */
     private void requestLocationPermission() {
         ActivityCompat.requestPermissions(
@@ -258,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Checks if SMS permission is granted.
+     * Helper function: checks if SMS permission is granted.
      */
     private boolean checkSmsPermission() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) ==
@@ -266,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Requests SMS permission.
+     * Helper function: requests SMS permission.
      */
     private void requestSmsPermission() {
         ActivityCompat.requestPermissions(
@@ -300,9 +308,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Stop location updates when activity is not in foreground
-        if (fusedLocationClient != null && locationCallback != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
-        }
+        //if app is minimized, allow to run in background. To distinguish between minimized vs actually closing:
+         if (isFinishing()) {
+             //only remove updates if the app is actually closing
+             fusedLocationClient.removeLocationUpdates(locationCallback);
+         }
     }
 }
